@@ -1,5 +1,10 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+# Server code
+server code can be found in folder `server`
+How to start it?
+`node server`
+
 ## Available Scripts
 
 In the project directory, you can run:

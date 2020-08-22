@@ -1,25 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, userEffect, useRef, useEffect } from 'react';
 import Header from './Header';
 import Section from './Section';
 import List from './List';
 import Form from '../example2/Form';
+import axios from 'axios';
+
+
+const sortRecords = records =>
+    records.sort((a, b) => {
+        if (a.recordName < b.recordName) {
+            return -1;
+        }
+        if (a.recordName > b.recordName) {
+            return 1;
+        }
+        return 0;
+    });
 
 const Container = () => {
     const [records, setRecords] = useState([]);
     const [liveText, setLiveText] = useState('');
+    const isMounted = useRef(true);
 
-    const onSubmitHandler = entry => {
-        setRecords([...records, entry].sort((a, b) => {
-            if (a.recordName < b.recordName) {
-                return -1;
+    useEffect(() => {
+        const fetchData = async () => {
+            const { data } = await axios.get('/api/records', {
+                headers: {
+                    'Cache-Control': 'private',
+                    'X-Custom-Header': 'some-value'
+                },
+            });
+            if (isMounted.current) {
+                setRecords(sortRecords(data));
             }
-            if (a.recordName > b.recordName) {
-                return 1;
-            }
-            return 0;
-        }));
+        };
+        fetchData();
+        return () => {
+            isMounted.current = false;
+        }
 
-        setLiveText(`${entry.recordName} successfully added.`);
+    }, []);
+
+    const onSubmitHandler = async (entry) => {
+        const { data } = await axios.post('/api/records', entry);
+        console.log({ data });
+        if (isMounted.current) {
+            setRecords(sortRecords([...records, data]));
+            setLiveText(`${entry.recordName} successfully added.`);
+        }
     }
 
     return (
